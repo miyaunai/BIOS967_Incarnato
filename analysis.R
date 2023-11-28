@@ -34,9 +34,9 @@ parents_mean=parents%>%group_by(file) %>%
   mutate(parents_id=str_replace(file, "M_PC_23_G_", ""))
 
 offspring_mean %>% left_join(., parents_mean, by=join_by(parent1==parents_id))
+offspring_mean %>% left_join(., parents_mean, by=join_by(parent2==parents_id))
+
 
 #parents_id=pull(parents_mean, file) %>% str_replace("M_PC_23_G_", "")
 
 
-##
-unique(offspring$file)

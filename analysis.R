@@ -14,8 +14,17 @@ offspring_mean=offspring %>% group_by(file) %>% summarise(area=mean(mean_area))
 offspring_id=pull(offspring_mean, file)
 offspring_id
 
-parents_mean=parents%>%group_by(file) %>% summarise(area=mean(mean_area))
+offspring_id %>% 
 
-parents_id=pull(parents_mean, file)
-parents_id
 
+unique(parents$file)
+
+parents_mean=parents%>%group_by(file) %>% 
+  summarise(area=mean(mean_area)) %>%
+  mutate(parents_id=str_replace(file, "M_PC_23_G_", ""))
+
+#parents_id=pull(parents_mean, file) %>% str_replace("M_PC_23_G_", "")
+
+
+##
+unique(offspring$file)

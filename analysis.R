@@ -13,3 +13,9 @@ offspring_mean=offspring %>% group_by(file) %>% summarise(area=mean(mean_area))
 
 offspring_id=pull(offspring_mean, file)
 offspring_id
+
+parents_mean=parents%>%group_by(file) %>% summarise(area=mean(mean_area))
+
+parents_id=pull(parents_mean, file)
+parents_id
+

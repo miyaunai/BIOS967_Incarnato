@@ -9,12 +9,16 @@ View(offspring)
 
 library(tidyverse)
 
-offspring_mean=offspring %>% group_by(file) %>% summarise(area=mean(mean_area))
+unique(offspring$file)
 
+offspring_mean=offspring %>% group_by(file) %>% 
+  summarise(area=mean(mean_area)) %>%
+    mutate(offspring_id=str_replace(file, "M_F2_", ""))    
+    
 offspring_id=pull(offspring_mean, file)
 offspring_id
 
-offspring_id %>% 
+offspring_id %>% str_replace("M_F2_", "")
 
 
 unique(parents$file)

@@ -24,17 +24,18 @@ p1=parent1[,1]
 parent2=parent1[,2] %>% str_split("_", simplify=T) 
 p2=parent2[,1]
 
-offspring_mean=offspring_mean %>% mutate(parent1=p1) %>% mutate(parent2=p2)
+offspring_mean=offspring_mean %>% mutate(parent1=p1) %>% mutate(parent2=p2) %>% mutate(offspring_area=area) %>% select(-area)
 
 
 unique(parents$file)
 
-parents_mean=parents%>%group_by(file) %>% 
+parents_area=parents%>%group_by(file) %>% 
   summarise(area=mean(mean_area)) %>%
-  mutate(parents_id=str_replace(file, "M_PC_23_G_", ""))
+  mutate(parents_id=str_replace(file, "M_PC_23_G_", "")) %>%
+  select(-file)
 
-offspring_mean %>% left_join(., parents_mean, by=join_by(parent1==parents_id))
-offspring_mean %>% left_join(., parents_mean, by=join_by(parent2==parents_id))
+offspring_mean %>% left_join(., parents_area, by=join_by(parent1==parents_id)) %>%
+left_join(., parents_area, by=join_by(parent2==parents_id))
 
 
 #parents_id=pull(parents_mean, file) %>% str_replace("M_PC_23_G_", "")

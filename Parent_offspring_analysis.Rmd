@@ -1,0 +1,115 @@
+---
+title: "Miyauna Parent/Offspring Regression"
+author: "Drafted by Miyauna and edited by Dai"
+output:
+  html_document: default
+  pdf_document: default
+date: "2023-12-08"
+---
+
+The R codes within the R Markdown document has to be inside "code chunks" that start with 
+
+` ```{r} `
+
+and end with
+
+` ``` `
+
+Then, the code that appears between those lines are executed when you "knit" the document. 
+
+```{r}
+parents=read.csv("Paramecium_Phenotype_Data_Parents.csv")
+offspring=read.csv("Paramecium_Phenotype_Data.csv")
+```
+
+```{r}
+head(parents)
+```
+
+```{r}
+head(offspring)
+```
+
+```{r}
+library(tidyverse)
+```
+
+## parent/offspring regression for area
+
+Here is the file names in the "offspring" data:
+
+```{r}
+unique(offspring$file)
+```
+
+First, I removed varaibles from the offspring names to make it easier to compare to the parents using the mutate function
+
+```{r}
+offspring_mean=offspring %>% group_by(file) %>% 
+  summarise(area=mean(mean_area)) 
+
+offspring_mean
+```
+
+```{r}
+
+offspring_id=pull(offspring_mean, file)
+
+```
+
+I then replaced the irrelvent identification variable in the parent id with a blank space using the mutate function
+
+I did the above for parents 1 and 2
+
+```{r}
+parent1=offspring_id %>% str_replace("M_F2_", "") %>% str_split("x", simplify=T) 
+p1=parent1[,1]
+
+parent2=parent1[,2] %>% str_split("_", simplify=T) 
+p2=parent2[,1]
+```
+
+```{r}
+offspring_mean=offspring_mean %>% mutate(parent1=p1) %>% mutate(parent2=p2) %>% mutate(offspring_area=area) %>% select(-area)
+```
+
+```{r}
+offspring_mean
+```
+
+### I created unique files for the offspring and parent areas with the new names 
+
+```{r}
+parents_area=parents%>%group_by(file) %>% 
+  summarise(area=mean(mean_area)) %>%
+  mutate(parents_id=str_replace(file, "M_PC_23_G_", "")) %>%
+  select(-file)
+```
+
+
+I joined the files together using the left join function
+
+```{r}
+area_data=offspring_mean %>% left_join(., parents_area, by=join_by(parent1==parents_id)) %>%
+left_join(., parents_area, by=join_by(parent2==parents_id)) %>% 
+  mutate(midparent_area=(area.y+area.x)/2)
+
+
+#parents_id=pull(parents_mean, file) %>% str_replace("M_PC_23_G_", "")
+```
+
+Then I ran the actual regression analysis
+
+```{r}
+po_reg_area<-glm(area_data$offspring_area~area_data$midparent_area)
+summary(po_reg_area)
+```
+
+### lastly i ploted the graph using ggplot 
+
+```{r}
+ggplot(data=area_data,aes(x=midparent_area, y=offspring_area))+
+  geom_point()+
+  geom_smooth(method=glm)
+```
+

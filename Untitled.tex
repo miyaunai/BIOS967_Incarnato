@@ -1,0 +1,156 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Miyauna Parent/Offspring Regression},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Miyauna Parent/Offspring Regression}
+\author{}
+\date{\vspace{-2.5em}2023-12-08}
+
+\begin{document}
+\maketitle
+
+parents=read.csv(``Paramecium\_Phenotype\_Data\_Parents.csv'')
+offspring=read.csv(``Paramecium\_Phenotype\_Data.csv'')
+
+parents offspring
+
+View(parents) View(offspring)
+
+library(tidyverse)
+
+unique(offspring\$file)
+
+\#parent/offspring regression for area
+
+\#first i remived varaibles from the offspring names to make it easier
+to compare to the parents using the mutate function
+
+offspring\_mean=offspring \%\textgreater\% group\_by(file)
+\%\textgreater\% summarise(area=mean(mean\_area)) \%\textgreater\%
+mutate(offspring\_id=str\_replace(file, ``M\_F2\_'', ``\,``))
+
+offspring\_id=pull(offspring\_mean, file) offspring\_id
+
+\hypertarget{i-then-replaced-the-irrelvent-identification-variable-in-the-parent-id-with-a-blank-space-using-the-mutate-function}{%
+\section{i then replaced the irrelvent identification variable in the
+parent id with a blank space using the mutate
+function}\label{i-then-replaced-the-irrelvent-identification-variable-in-the-parent-id-with-a-blank-space-using-the-mutate-function}}
+
+parent1=offspring\_id \%\textgreater\% str\_replace(``M\_F2\_'', ````)
+\%\textgreater\% str\_split(''x'', simplify=T) p1=parent1{[},1{]}
+
+parent2=parent1{[},2{]} \%\textgreater\% str\_split(``\_``, simplify=T)
+p2=parent2{[},1{]}
+
+\hypertarget{i-did-thr-above-for-parents-1-and-2}{%
+\section{i did thr above for parents 1 and
+2}\label{i-did-thr-above-for-parents-1-and-2}}
+
+offspring\_mean=offspring\_mean \%\textgreater\% mutate(parent1=p1)
+\%\textgreater\% mutate(parent2=p2) \%\textgreater\%
+mutate(offspring\_area=area) \%\textgreater\% select(-area)
+
+\hypertarget{i-created-unique-files-for-the-offspring-and-parent-areas-with-the-new-names}{%
+\section{i created unique files for the offspring and parent areas with
+the new
+names}\label{i-created-unique-files-for-the-offspring-and-parent-areas-with-the-new-names}}
+
+unique(parents\$file)
+
+parents\_area=parents\%\textgreater\%group\_by(file) \%\textgreater\%
+summarise(area=mean(mean\_area)) \%\textgreater\%
+mutate(parents\_id=str\_replace(file, ``M\_PC\_23\_G\_'', ``\,``))
+\%\textgreater\% select(-file)
+
+\hypertarget{i-joined-the-files-together-using-the-left-join-function}{%
+\section{i joined the files together using the left join
+function}\label{i-joined-the-files-together-using-the-left-join-function}}
+
+area\_data=offspring\_mean \%\textgreater\% left\_join(., parents\_area,
+by=join\_by(parent1==parents\_id)) \%\textgreater\% left\_join(.,
+parents\_area, by=join\_by(parent2==parents\_id)) \%\textgreater\%
+mutate(midparent\_area=(area.y+area.x)/2)
+
+\#parents\_id=pull(parents\_mean, file) \%\textgreater\%
+str\_replace(``M\_PC\_23\_G\_'', ``\,``)
+
+\hypertarget{then-i-ran-the-actual-regression-analysis}{%
+\section{then i ran the actual regression
+analysis}\label{then-i-ran-the-actual-regression-analysis}}
+
+po\_reg\_area\textless-glm(area\_data\(offspring_area~area_data\)midparent\_area)
+
+\hypertarget{lastly-i-ploted-the-graph-using-ggplot}{%
+\section{lastly i ploted the graph using
+ggplot}\label{lastly-i-ploted-the-graph-using-ggplot}}
+
+ggplot(data=area\_data,aes(x=midparent\_area, y=offspring\_area))+
+geom\_point()+ geom\_smooth(method=glm)
+
+po\_reg\_area\textless-glm(area\_data\(offspring_area~area_data\)midparent\_area)
+anova(po\_reg\_area)
+
+\end{document}
